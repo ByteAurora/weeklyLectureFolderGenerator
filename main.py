@@ -7,7 +7,7 @@ from workalendar.asia import SouthKorea
 
 
 def get_korean_weekday(num):
-    WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+    WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일']
     return WEEKDAYS[num]
 
 
