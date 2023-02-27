@@ -7,18 +7,30 @@ from tkcalendar import Calendar
 from workalendar.asia import SouthKorea
 
 
+def get_korean_weekday(num):
+    WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+    return WEEKDAYS[num]
+
+
 class LectureFolderCreator:
     """
     폴더 생성기 클래스
     """
+
     def __init__(self):
         """
         초기화 함수
         """
+        self.path_var = None
+        self.name_var = None
+        self.date_var = None
+        self.total_weeks_var = None
+        self.midterm_var = None
+        self.final_var = None
+        self.tree = None
         self.root = tk.Tk()
         self.root.geometry("640x480")
         self.root.title("강의 주차별 폴더 생성기")
-
 
         # UI 생성
         self.create_widgets()
@@ -47,7 +59,6 @@ class LectureFolderCreator:
         self.date_var = tk.StringVar()
         tk.Label(left_frame, text="시작일자", anchor="center").grid(row=4, column=0, pady=5)
         tk.Entry(left_frame, textvariable=self.date_var).grid(row=5, column=0, pady=5)
-        tk.Button(left_frame, text="날짜 선택", command=self.pick_date).grid(row=5, column=1)
 
         # 총 주차
         self.total_weeks_var = tk.StringVar()
@@ -85,33 +96,11 @@ class LectureFolderCreator:
         self.tree.heading("#0", text="폴더명")
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-    def pick_date(self):
-        # 캘린더 팝업 띄우기
-        date_str = self.date_var.get()
-        try:
-            date = datetime.strptime(date_str, "%Y-%m-%d")  # 입력받은 날짜가 없는 경우 현재 날짜를 사용
-        except ValueError:
-            date = datetime.now()
-
-        top = tk.Toplevel(self.root)  # 최상위 레벨의 윈도우를 생성
-
-        cal = Calendar(top, font="Arial 14", selectmode='day', cursor="hand1", year=date.year, month=date.month,
-                       day=date.day)  # 캘린더 위젯 생성
-        cal.pack(fill="both", expand=True)  # 위젯을 레이아웃에 추가
-
-        def on_date_select():
-            self.date_var.set(
-                datetime.strptime(cal.get_date(), "%m/%d/%y").strftime("%Y-%m-%d"))  # 날짜 포맷을 변경하여 입력값으로 설정
-            top.destroy()  # 최상위 레벨 윈도우를 닫음
-
-        tk.Button(top, text="선택", command=on_date_select).pack()  # 날짜 선택 버튼 생성
-
     def preview(self):
         # Treeview 초기화
         self.tree.delete(*self.tree.get_children())
 
         # 사용자 입력값 읽기
-        path = self.path_var.get()
         name = self.name_var.get()
         date_str = self.date_var.get()
         weeks = self.total_weeks_var.get()
@@ -133,11 +122,11 @@ class LectureFolderCreator:
         cal = SouthKorea()
         for i in range(1, total_weeks + 1):
             if midterm.strip() != "" and i == int(midterm):
-                week_str = f"{cur_week}주차 ({cur_date.strftime('%Y.%m.%d.')}{self.get_korean_weekday(cur_date.weekday())}) - 중간고사"
+                week_str = f"{cur_week}주차 ({cur_date.strftime('%Y.%m.%d.')}{get_korean_weekday(cur_date.weekday())}) - 중간고사"
             elif final.strip() != "" and i == int(final):
-                week_str = f"{cur_week}주차 ({cur_date.strftime('%Y.%m.%d.')}{self.get_korean_weekday(cur_date.weekday())}) - 기말고사"
+                week_str = f"{cur_week}주차 ({cur_date.strftime('%Y.%m.%d.')}{get_korean_weekday(cur_date.weekday())}) - 기말고사"
             else:
-                week_str = f"{cur_week}주차 ({cur_date.strftime('%Y.%m.%d.')}{self.get_korean_weekday(cur_date.weekday())})"
+                week_str = f"{cur_week}주차 ({cur_date.strftime('%Y.%m.%d.')}{get_korean_weekday(cur_date.weekday())})"
 
             # 주차 추가
             weeks.append({
@@ -175,14 +164,13 @@ class LectureFolderCreator:
         weeks = []
         cur_date = start_date
         cur_week = 1
-        cal = SouthKorea()
         for i in range(1, total_weeks + 1):
             if midterm.strip() != "" and i == int(midterm):
-                week_str = f"{cur_week}주차 ({cur_date.strftime('%Y.%m.%d.')}{self.get_korean_weekday(cur_date.weekday())}) - 중간고사"
+                week_str = f"{cur_week}주차 ({cur_date.strftime('%Y.%m.%d.')}{get_korean_weekday(cur_date.weekday())}) - 중간고사"
             elif final.strip() != "" and i == int(final):
-                week_str = f"{cur_week}주차 ({cur_date.strftime('%Y.%m.%d.')}{self.get_korean_weekday(cur_date.weekday())}) - 기말고사"
+                week_str = f"{cur_week}주차 ({cur_date.strftime('%Y.%m.%d.')}{get_korean_weekday(cur_date.weekday())}) - 기말고사"
             else:
-                week_str = f"{cur_week}주차 ({cur_date.strftime('%Y.%m.%d.')}{self.get_korean_weekday(cur_date.weekday())})"
+                week_str = f"{cur_week}주차 ({cur_date.strftime('%Y.%m.%d.')}{get_korean_weekday(cur_date.weekday())})"
 
             # 주차 추가
             week_path = os.path.join(path, name, week_str)
@@ -206,10 +194,6 @@ class LectureFolderCreator:
             date_str = f"{week['start'].strftime('%Y.%m.%d')} ~ {week['end'].strftime('%Y.%m.%d')}"
             # 각 주차에 해당하는 노드 추가
             self.tree.insert(parent_id, "end", text=week["name"], values=(date_str))
-
-    def get_korean_weekday(self, num):
-        WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
-        return WEEKDAYS[num]
 
     def run(self):
         self.root.mainloop()
